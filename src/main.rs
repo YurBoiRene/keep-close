@@ -1,10 +1,3 @@
-/*!
- * This is an example of how one can define a println!() macro which can be called anywhere to
- * write data to the console.
- *
- * Keep in mind that this will enter a critical section while printing so no interrupts can be
- * served in the meantime.
- */
 #![no_std]
 #![no_main]
 

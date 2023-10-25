@@ -6,13 +6,16 @@ use arduino_hal::port::{mode::{PullUp, Input}, Pin, PinOps};
 use panic_halt as _;
 
 use avr_device::interrupt;
-use core::{cell::RefCell, time::Duration};
+use core::{cell::{RefCell, Cell}, time::Duration};
 
 mod millis;
 use millis::{millis, millis_init};
 
 mod buzzer;
 use buzzer::Buzzer;
+
+mod button;
+use button::Button;
 
 type Console = arduino_hal::hal::usart::Usart0<arduino_hal::DefaultClock>;
 static CONSOLE: interrupt::Mutex<RefCell<Option<Console>>> =
@@ -67,6 +70,9 @@ fn main() -> ! {
     let serial = arduino_hal::default_serial!(dp, pins, 57600);
     put_console(serial);
     let buzzer = Buzzer::new(dp.TC1, pins.d9);
+   
+    let mut button = Button::new(pins.d4);
+    let alarm_enabled = Cell::new(true);
 
     millis_init(dp.TC0);
 
@@ -81,11 +87,23 @@ fn main() -> ! {
     let mut last_open = millis();
     let mut last_open_status = false;
     loop {
+        button.on_press(|| {
+            let enabled = alarm_enabled.get();
+
+            alarm_enabled.set(!enabled);
+            
+            print!("Alarm set to ");
+            if alarm_enabled.get() {
+                println!("enabled");
+            } else {
+                println!("disabled");
+            }
+        });
+
         let cur_open_status = door.is_open();
         if cur_open_status {
             led.set_high();
             if !last_open_status {
-                // Just got opened
                 println!("Door just opened.");
 
                 last_open = millis();
@@ -93,13 +111,12 @@ fn main() -> ! {
             
             let cur_time = millis();
             if cur_time - last_open > OPEN_ALARM_MILLIS {
-                // TODO screech speaker
                 println!("OPEN TOO LONG!!");
-                let mut freq: i32 = 6000;
-                while freq > 0{
-                    buzzer.set_freq(freq.try_into().unwrap());
-                    arduino_hal::delay_ms(50);
-                    freq -= 50;
+                if alarm_enabled.get() {
+                    let freq = 500;
+                    buzzer.set_freq(freq);
+                } else {
+                    buzzer.off();
                 }
             }
         } else {

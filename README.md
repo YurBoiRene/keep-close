@@ -13,7 +13,7 @@ The project is build in Rust for the _Arduino Uno_ using [ `avr-hal` ]. In the f
 - [ ] Option to use active buzzer
 - [ ] Play melody on door open
 - [ ] Physical implementation
-- [ ] Disable button
+- [x] Disable button
 
 ## Build Instructions
 

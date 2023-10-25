@@ -11,6 +11,9 @@ use core::{cell::RefCell, time::Duration};
 mod millis;
 use millis::{millis, millis_init};
 
+mod buzzer;
+use buzzer::Buzzer;
+
 type Console = arduino_hal::hal::usart::Usart0<arduino_hal::DefaultClock>;
 static CONSOLE: interrupt::Mutex<RefCell<Option<Console>>> =
     interrupt::Mutex::new(RefCell::new(None));
@@ -63,6 +66,8 @@ fn main() -> ! {
     let pins = arduino_hal::pins!(dp);
     let serial = arduino_hal::default_serial!(dp, pins, 57600);
     put_console(serial);
+    let buzzer = Buzzer::new(dp.TC1, pins.d9);
+
     millis_init(dp.TC0);
 
     unsafe { avr_device::interrupt::enable() };
@@ -90,9 +95,11 @@ fn main() -> ! {
             if cur_time - last_open > OPEN_ALARM_MILLIS {
                 // TODO screech speaker
                 println!("OPEN TOO LONG!!");
+                buzzer.set_freq(1000);
             }
         } else {
             led.set_low();
+            buzzer.off();
         }
         last_open_status = cur_open_status;
     }

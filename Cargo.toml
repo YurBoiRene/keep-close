@@ -17,6 +17,11 @@ nb = "1.1.0"
 embedded-hal = "0.2.3"
 avr-device = "0.5.2"
 
+[dependencies.pitch_calc]
+git = "https://github.com/YurBoiRene/pitch_calc"
+rev = "96f4dc45640e671a66099fded570b1a8a23f4206"
+features = []
+
 [dependencies.arduino-hal]
 git = "https://github.com/rahix/avr-hal"
 rev = "7dfa6d322b9df98b2d98afe0e14a97afe0187ac1"

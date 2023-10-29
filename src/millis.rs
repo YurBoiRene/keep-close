@@ -39,7 +39,6 @@ pub fn millis_init(tc0: arduino_hal::pac::TC0) {
     });
 }
 
-
 #[avr_device::interrupt(atmega328p)]
 fn TIMER0_COMPA() {
     avr_device::interrupt::free(|cs| {
@@ -49,9 +48,6 @@ fn TIMER0_COMPA() {
     })
 }
 
-
 pub fn millis() -> Duration {
-    Duration::from_millis(
-        avr_device::interrupt::free(|cs| MILLIS_COUNTER.borrow(cs).get()).into()
-    )
+    Duration::from_millis(avr_device::interrupt::free(|cs| MILLIS_COUNTER.borrow(cs).get()).into())
 }

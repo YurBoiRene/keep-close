@@ -1,13 +1,19 @@
-use arduino_hal::{port::{Pin, mode::{Input, Floating}}, hal::port::PB1};
+use arduino_hal::{
+    hal::port::PB1,
+    port::{
+        mode::{Floating, Input},
+        Pin,
+    },
+};
 
 // TODO use something like pitch_calc to pass frequency, pitches, etc.
 // pitch_calc requires std :(
 
-// Theorhetically a prescaler of 8 would get us
-// a better resultion on pitch however, it causes
+// Theoretically a prescaler of 8 would get us
+// a better resolution on pitch however, it causes
 // problems and does not produce the right pitch.
-// Minimum freq: ocrr1a=65,535, freq=15 Hz
-// Maximum freq: ocrr1a=3, freq=250,000 Hz
+// Minimum freq: ocr1a=65,535, freq=15 Hz
+// Maximum freq: ocr1a=3, freq=250,000 Hz
 // Human hearing range between 20-20,000 Hz
 // https://www.desmos.com/calculator/m80qodskjs
 // For now, 64.
@@ -23,10 +29,8 @@ pub struct Buzzer {
 }
 
 impl Buzzer {
-    pub fn new(tc1: arduino_hal::pac::TC1, d9: PWMPin) -> Self{
-        let rtn = Buzzer {
-            tc1
-        };
+    pub fn new(tc1: arduino_hal::pac::TC1, d9: PWMPin) -> Self {
+        let rtn = Buzzer { tc1 };
         rtn.init(d9);
         rtn
     }
@@ -36,18 +40,21 @@ impl Buzzer {
         // TC1 gives us 16-bits to work with
         // Also enable PWM on pin 9
         // See also enable/disable
-        // Section 15.9 of ATmega328P Datasheet
+        // Section 15.9 of ATmega328P data sheet
         let initial_freq = freq_to_occr1a(1000);
 
         self.tc1.ocr1a.write(|w| w.bits(initial_freq));
-        self.tc1.tccr1b.write(|w| match PRESCALER {
-            8 => w.cs1().prescale_8(),
-            64 => w.cs1().prescale_64(),
-            256 => w.cs1().prescale_256(),
-            1024 => w.cs1().prescale_1024(),
-            _ => panic!(),
-        }
-        .wgm1().variant(BUZZER_VARIANT));
+        self.tc1.tccr1b.write(|w| {
+            match PRESCALER {
+                8 => w.cs1().prescale_8(),
+                64 => w.cs1().prescale_64(),
+                256 => w.cs1().prescale_256(),
+                1024 => w.cs1().prescale_1024(),
+                _ => panic!(),
+            }
+            .wgm1()
+            .variant(BUZZER_VARIANT)
+        });
 
         d9.into_output();
 
@@ -55,8 +62,8 @@ impl Buzzer {
     }
 
     pub fn set_freq(&self, freq: Hz) {
-        let new_occr1a = freq_to_occr1a(freq);
-        self.tc1.ocr1a.write(|w| w.bits(new_occr1a));
+        let new_output = freq_to_occr1a(freq);
+        self.tc1.ocr1a.write(|w| w.bits(new_output));
         self.enable();
     }
 
@@ -65,24 +72,21 @@ impl Buzzer {
     }
 
     fn disable(&self) {
-        self.tc1.tccr1a.write(|w|
-            w.wgm1().variant(BUZZER_VARIANT)
-            .com1a().disconnected()
-        );
+        self.tc1
+            .tccr1a
+            .write(|w| w.wgm1().variant(BUZZER_VARIANT).com1a().disconnected());
     }
     fn enable(&self) {
-        self.tc1.tccr1a.write(|w|
-            w.wgm1().variant(BUZZER_VARIANT)
-            .com1a().match_toggle()
-        );
+        self.tc1
+            .tccr1a
+            .write(|w| w.wgm1().variant(BUZZER_VARIANT).com1a().match_toggle());
     }
 }
 
 fn freq_to_occr1a(freq: Hz) -> u16 {
     // freq = 16000000 / (2 * PRESCALER * (occr1a + 1))
-    // Section 15.9.3 of ATmega328P Datasheet
+    // Section 15.9.3 of ATmega328P data sheet
     ((16000000 / (freq * 2 * PRESCALER)) - 1)
         .try_into()
         .unwrap_or(u16::MAX)
 }
-

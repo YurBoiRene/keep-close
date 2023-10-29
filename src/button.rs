@@ -1,9 +1,11 @@
 use core::time::Duration;
 
-use arduino_hal::port::{Pin, mode::{Input, PullUp, self}, PinOps};
+use arduino_hal::port::{
+    mode::{self, Input, PullUp},
+    Pin, PinOps,
+};
 
 use crate::millis;
-
 
 type Pressed = bool;
 

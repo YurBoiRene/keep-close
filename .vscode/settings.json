@@ -1,0 +1,10 @@
+{
+    "cSpell.words": [
+        "atmega",
+        "PRESCALER"
+    ],
+    "cSpell.ignoreRegExpList": [
+        "[a-zA-Z0-9\\_\\!]+\\([^\\)]*\\)(\\.[^\\)]*\\))?",
+        "\\.[a-zA-Z]+"
+    ]
+}

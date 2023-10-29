@@ -2,11 +2,20 @@
 #![no_main]
 #![feature(abi_avr_interrupt)]
 
-use arduino_hal::port::{mode::{PullUp, Input}, Pin, PinOps};
+use arduino_hal::port::{
+    mode::{Input, PullUp},
+    Pin, PinOps,
+};
 use panic_halt as _;
 
 use avr_device::interrupt;
-use core::{cell::{RefCell, Cell}, time::Duration};
+use core::{
+    cell::{Cell, RefCell},
+    time::Duration,
+};
+
+/* spellchecker: disable */
+use ufmt::{uwrite, uwriteln};
 
 mod millis;
 use millis::{millis, millis_init};
@@ -20,13 +29,14 @@ use button::Button;
 type Console = arduino_hal::hal::usart::Usart0<arduino_hal::DefaultClock>;
 static CONSOLE: interrupt::Mutex<RefCell<Option<Console>>> =
     interrupt::Mutex::new(RefCell::new(None));
+/* spellchecker: enable */
 
 macro_rules! print {
     ($($t:tt)*) => {
         interrupt::free(
             |cs| {
                 if let Some(console) = CONSOLE.borrow(cs).borrow_mut().as_mut() {
-                    let _ = ufmt::uwrite!(console, $($t)*);
+                    let _ = uwrite!(console, $($t)*);
                 }
             },
         )
@@ -38,7 +48,7 @@ macro_rules! println {
         interrupt::free(
             |cs| {
                 if let Some(console) = CONSOLE.borrow(cs).borrow_mut().as_mut() {
-                    let _ = ufmt::uwriteln!(console, $($t)*);
+                    let _ = uwriteln!(console, $($t)*);
                 }
             },
         )
@@ -51,14 +61,13 @@ fn put_console(console: Console) {
     })
 }
 
-
 struct Door<T: PinOps> {
-    reed: Pin<Input<PullUp>, T>
+    reed: Pin<Input<PullUp>, T>,
 }
 
 impl<T: PinOps> Door<T> {
     fn is_open(&self) -> bool {
-        return self.reed.is_high();
+        self.reed.is_high()
     }
 }
 
@@ -70,7 +79,7 @@ fn main() -> ! {
     let serial = arduino_hal::default_serial!(dp, pins, 57600);
     put_console(serial);
     let buzzer = Buzzer::new(dp.TC1, pins.d9);
-   
+
     let mut button = Button::new(pins.d4);
     let alarm_enabled = Cell::new(true);
 
@@ -81,7 +90,6 @@ fn main() -> ! {
     let mut led = pins.d13.into_output();
     let reed = pins.d2.into_pull_up_input();
 
-
     println!("keep-close started.");
     let door = Door { reed };
     let mut last_open = millis();
@@ -91,7 +99,7 @@ fn main() -> ! {
             let enabled = alarm_enabled.get();
 
             alarm_enabled.set(!enabled);
-            
+
             print!("Alarm set to ");
             if alarm_enabled.get() {
                 println!("enabled");
@@ -108,7 +116,7 @@ fn main() -> ! {
 
                 last_open = millis();
             }
-            
+
             let cur_time = millis();
             if cur_time - last_open > OPEN_ALARM_MILLIS {
                 println!("OPEN TOO LONG!!");

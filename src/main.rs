@@ -71,7 +71,7 @@ impl<T: PinOps> Door<T> {
     }
 }
 
-const OPEN_ALARM_MILLIS: Duration = Duration::from_secs(1);
+const OPEN_ALARM_MILLIS: Duration = Duration::from_secs(30);
 #[arduino_hal::entry]
 fn main() -> ! {
     let dp = arduino_hal::Peripherals::take().unwrap();
@@ -121,7 +121,7 @@ fn main() -> ! {
             if cur_time - last_open > OPEN_ALARM_MILLIS {
                 println!("OPEN TOO LONG!!");
                 if alarm_enabled.get() {
-                    let freq = 500;
+                    let freq = 1000;
                     buzzer.set_freq(freq);
                 } else {
                     buzzer.off();

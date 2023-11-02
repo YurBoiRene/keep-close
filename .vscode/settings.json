@@ -1,7 +1,11 @@
 {
     "cSpell.words": [
         "atmega",
-        "PRESCALER"
+        "avrdude",
+        "libc",
+        "PRESCALER",
+        "ravedude",
+        "UART"
     ],
     "cSpell.ignoreRegExpList": [
         "[a-zA-Z0-9\\_\\!]+\\([^\\)]*\\)(\\.[^\\)]*\\))?",
